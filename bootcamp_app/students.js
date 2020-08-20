@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -8,16 +9,17 @@ const pool = new Pool({
 });
 
 pool.connect();     // connect to the db, just like psql in terminal
-let name = process.argv[2];
-let limit = process.argv[3];
+const cohortName = process.argv[2];
+const limit = process.argv[3] || 5;
+const value = [`%${cohortName}%`, limit];
 
 pool.query(`
   SELECT students.id AS student_id, students.name AS name, cohorts.name AS cohort
   FROM students
   JOIN cohorts ON cohorts.id = cohort_id
-  WHERE cohorts.name LIKE '%${name}%'
-  LIMIT ${limit};
-`)
+  WHERE cohorts.name LIKE $1
+  LIMIT $2;
+`, value)
   .then(resolved => {
     console.log(resolved.rows); // rows key store the query result, a array of objects
     resolved.rows.forEach(user => {
